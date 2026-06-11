@@ -16,15 +16,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 warnings.filterwarnings("ignore")
 plt.style.use("ggplot")
 
-# ================= LOAD DATA =================
-
 df = pd.read_csv(r"D:\Sumalatha\Kidney_data.csv")
-
-# Drop id column
 if 'id' in df.columns:
     df.drop('id', axis=1, inplace=True)
-
-# ================= CLEAN TARGET =================
 
 df['classification'] = (
     df['classification']
@@ -43,12 +37,9 @@ df['classification'] = df['classification'].map({
     'not ckd': 1
 })
 
-# ================= FIX DATA TYPES =================
 
 for col in ['pcv', 'wc', 'rc']:
     df[col] = pd.to_numeric(df[col], errors='coerce')
-
-# Clean categorical values
 
 if 'dm' in df.columns:
     df['dm'] = df['dm'].replace({
@@ -61,8 +52,6 @@ if 'cad' in df.columns:
     df['cad'] = df['cad'].replace({
         '\tno': 'no'
     })
-
-# ================= HANDLE MISSING VALUES =================
 
 cat_cols = df.select_dtypes(include='object').columns
 
@@ -78,17 +67,11 @@ for col in num_cols:
 for col in cat_cols:
     df[col] = df[col].fillna(df[col].mode()[0])
 
-# Encode categorical columns
-
 for col in cat_cols:
     le = LabelEncoder()
     df[col] = le.fit_transform(df[col])
 
-# Remove rows with missing target
-
 df.dropna(subset=['classification'], inplace=True)
-
-# ================= FEATURES & TARGET =================
 
 X = df.drop('classification', axis=1)
 y = df['classification']
@@ -96,17 +79,11 @@ y = df['classification']
 print("\nClass Distribution:")
 print(y.value_counts())
 
-# Imputation
-
 imputer = SimpleImputer(strategy='mean')
 X = imputer.fit_transform(X)
 
-# Scaling
-
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
-
-# Train Test Split
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -116,7 +93,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-# ================= MODELS =================
 
 models = {
     "KNN": KNeighborsClassifier(n_neighbors=5),
@@ -141,8 +117,6 @@ for name, model in models.items():
         "matrix": confusion_matrix(y_test, y_pred)
     }
 
-# ================= PDF =================
-
 pdf = PdfPages("results.pdf")
 
 def save_graph():
@@ -150,7 +124,6 @@ def save_graph():
     plt.show()
     plt.close()
 
-# ================= HEATMAP =================
 
 plt.figure(figsize=(12,8))
 
@@ -162,8 +135,6 @@ sns.heatmap(
 plt.title("Correlation Heatmap")
 plt.tight_layout()
 save_graph()
-
-# ================= KDE =================
 
 plt.figure(figsize=(8,5))
 
@@ -178,8 +149,6 @@ plt.title("Hemoglobin Distribution")
 plt.tight_layout()
 save_graph()
 
-# ================= CLASS DISTRIBUTION =================
-
 plt.figure(figsize=(6,4))
 
 sns.countplot(
@@ -190,8 +159,6 @@ sns.countplot(
 plt.title("CKD Class Distribution")
 plt.tight_layout()
 save_graph()
-
-# ================= HISTOGRAMS =================
 
 for col in ['bgr', 'bu', 'sc']:
 
@@ -209,8 +176,6 @@ for col in ['bgr', 'bu', 'sc']:
     plt.tight_layout()
     save_graph()
 
-# ================= ACCURACY COMPARISON =================
-
 acc_df = pd.DataFrame({
     "Model": list(results.keys()),
     "Accuracy": [results[m]['accuracy'] for m in results]
@@ -227,8 +192,6 @@ sns.barplot(
 plt.title("Model Accuracy Comparison")
 plt.tight_layout()
 save_graph()
-
-# ================= CONFUSION MATRICES =================
 
 for model_name in results:
 
@@ -248,7 +211,6 @@ for model_name in results:
     plt.tight_layout()
     save_graph()
 
-# ================= RESULTS =================
 
 for model_name in results:
 
